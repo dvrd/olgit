@@ -112,13 +112,10 @@ write_tree :: proc(from, to: string) -> []byte {
 
 		if cmp != 0 do return cmp
 
-		c1 := a.name[common_len]
-		if a.is_dir do c1 = '/'
+		c1 := a.is_dir ? '/' : a.name[common_len]
+		c2 := b.is_dir ? '/' : b.name[common_len]
 
-		c2 := b.name[common_len]
-		if b.is_dir do c2 = '/'
-
-		return c1 < c2 ? -1 : c1 > c2 ? 1 : 0
+		return sort.compare_u8s(c1, c2)
 	}
 	sort.bubble_sort_proc(fis, sort_files)
 
