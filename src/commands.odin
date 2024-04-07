@@ -8,6 +8,7 @@ Command :: union {
 	Hash_Object,
 	Ls_Tree,
 	Write_Tree,
+	Commit_Tree,
 }
 
 Init :: struct {}
@@ -28,6 +29,12 @@ Ls_Tree :: struct {
 }
 
 Write_Tree :: struct {}
+
+Commit_Tree :: struct {
+	tree_hash:   string,
+	parent_hash: Maybe(string),
+	message:     Maybe(string),
+}
 
 parsing_proc :: proc(input: string) -> (res: Command, ok: bool) {
 	using clodin
@@ -51,6 +58,13 @@ parsing_proc :: proc(input: string) -> (res: Command, ok: bool) {
 		return Ls_Tree{pos_string("tree", "tree hash"), flag("name-only")}, true
 	case "write-tree":
 		return Write_Tree{}, true
+	case "commit-tree":
+		return Commit_Tree {
+				pos_string("tree", "tree hash"),
+				opt_string("p", "parent hash"),
+				opt_string("m", "commit message"),
+			},
+			true
 	}
 	return nil, false
 }

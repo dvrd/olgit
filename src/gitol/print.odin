@@ -56,15 +56,12 @@ print_commit :: proc(object: ^Object, print_commit_tree: bool) {
 		catch(err, "failed to read commit tree info")
 
 		kind = strings.trim_space(kind)
-		if kind == "tree" {
-			tree_hash := bytes.buffer_next(&object.buf, 40)
-			print_object(transmute(string)tree_hash)
-		} else {
-			fmt.printfln("fatal: not a tree object (found: %s)", kind)
-		}
+		ensure(kind == "tree", "fatal: not a tree object (found: %s)", kind)
+
+		tree_hash := bytes.buffer_next(&object.buf, 40)
+		print_object(transmute(string)tree_hash)
 	} else {
 		file_contents := bytes.buffer_to_bytes(&object.buf)
-		defer delete(file_contents)
 		catch(write_stdout(file_contents))
 	}
 }

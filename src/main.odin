@@ -123,6 +123,19 @@ main :: proc() {
 		out := bytes.concatenate({encoded_hash, {'\n'}})
 		defer delete(out)
 		catch(write_stdout(out))
+	case Commit_Tree:
+		msg, ok := data.message.?
+		ensure(ok, "a message (-m:<message>) is required on the commit")
+
+		commit_hash := gitol.write_commit(data.tree_hash, msg, data.parent_hash)
+		defer delete(commit_hash)
+
+		encoded_hash := hex.encode(commit_hash)
+		defer delete(encoded_hash)
+
+		out := bytes.concatenate({encoded_hash, {'\n'}})
+		defer delete(out)
+		catch(write_stdout(out))
 	}
 
 	finish()
