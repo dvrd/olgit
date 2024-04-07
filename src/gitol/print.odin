@@ -16,7 +16,8 @@ print_tree :: proc(object: ^Object) {
 	entry_contents: []byte
 	entry_hash: string
 	mode_n_name: []string
-	mode, name: string
+	mode: int
+	name: string
 	obj_ref: ^Object
 
 	for !bytes.buffer_is_empty(&object.buf) {
@@ -32,20 +33,17 @@ print_tree :: proc(object: ^Object) {
 		mode_n_name = strings.split_n(entry_info, " ", 2)
 		defer delete(mode_n_name)
 
-		mode = mode_n_name[0]
+		mode = strconv.atoi(mode_n_name[0])
 		name = mode_n_name[1]
 
 		obj_ref, err = read_object(entry_hash)
 		catch(err, fmt.tprint(entry_hash))
 		defer destroy_object(obj_ref)
 
-		output := fmt.tprintfln(
-			"%6d %s %s\t%s",
-			strconv.atoi(mode),
-			strings.to_lower(fmt.tprint(obj_ref.kind)),
-			entry_hash,
-			name,
-		)
+		kind := strings.to_lower(fmt.tprint(obj_ref.kind))
+		defer delete(kind)
+
+		output := fmt.tprintfln("%6d %s %s\t%s", mode, kind, entry_hash, name)
 		catch(write_stdout(transmute([]byte)output))
 	}
 }

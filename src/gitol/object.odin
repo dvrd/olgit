@@ -2,22 +2,17 @@ package gitol
 
 import "core:bytes"
 import "core:compress/zlib"
-import "core:crypto/hash"
-import "core:encoding/hex"
 import "core:fmt"
-import "core:io"
 import "core:os"
-import "core:path/filepath"
 import "core:path/slashpath"
 import "core:sort"
 import "core:strconv"
 import "core:strings"
-import "libs:clodin"
 import "libs:failz"
 
 TREE_HEAD_BASE :: []byte{'t', 'r', 'e', 'e', ' '}
 PWD := os.get_current_directory()
-GITIGNORE_PATH := filepath.join({PWD, ".gitignore"})
+GITIGNORE_PATH := slashpath.join({PWD, ".gitignore"})
 
 ObjectKind :: enum {
 	Tree,
@@ -49,10 +44,9 @@ destroy_object :: proc(object: ^Object) {
 }
 
 read_object :: proc(obj_hash: string) -> (obj: ^Object, err: failz.Error) {
-	using clodin
 	using failz
 
-	obj_hash_path := filepath.join({GIT_OBJECTS_DIR, obj_hash[:2], obj_hash[2:]})
+	obj_hash_path := slashpath.join({GIT_OBJECTS_DIR, obj_hash[:2], obj_hash[2:]})
 	defer delete(obj_hash_path)
 
 	contents, success := os.read_entire_file(obj_hash_path)
@@ -111,10 +105,20 @@ write_tree :: proc(from, to: string) -> []byte {
 	catch(Errno(errno), fmt.tprintf("failed to read `%s`", from))
 
 
+	// NOTE: details about this sort -> https://sourcegraph.com/github.com/git/git@19981daefd7c147444462739375462b49412ce33/-/blob/tree.c?L99
 	sort_files :: proc(a, b: os.File_Info) -> int {
-		if strings.has_prefix(a.name, b.name) do return -1
-		if strings.has_prefix(b.name, a.name) do return 1
-		return strings.compare(a.name, b.name)
+		common_len := len(a.name) < len(b.name) ? len(a.name) - 1 : len(b.name) - 1
+		cmp := strings.compare(a.name[:common_len], b.name[:common_len])
+
+		if cmp != 0 do return cmp
+
+		c1 := a.name[common_len]
+		if a.is_dir do c1 = '/'
+
+		c2 := b.name[common_len]
+		if b.is_dir do c2 = '/'
+
+		return c1 < c2 ? -1 : c1 > c2 ? 1 : 0
 	}
 	sort.bubble_sort_proc(fis, sort_files)
 
