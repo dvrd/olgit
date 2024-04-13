@@ -13,32 +13,51 @@ import "libs:failz"
 PWD := os.get_current_directory()
 GITIGNORE_PATH := slashpath.join({PWD, ".gitignore"})
 
-ObjectKind :: enum {
+Blob :: struct {
+	hash: string,
+	data: []byte,
+}
+
+Object :: union {
 	Tree,
-	Blob,
 	Commit,
+	Blob,
 }
 
-Object :: struct {
-	kind: ObjectKind,
-	buf:  bytes.Buffer,
-}
-
-new_object :: proc(kind: string, buf: bytes.Buffer) -> ^Object {
+new_object :: proc(kind: string, hash: string, contents: []byte) -> ^Object {
 	object := new(Object)
+
 	switch kind {
 	case "tree":
-		object^ = Object{.Tree, buf}
+		object^ = new_tree(hash, contents)
 	case "commit":
-		object^ = Object{.Commit, buf}
+		object^ = new_commit(hash, contents)
 	case "blob":
-		object^ = Object{.Blob, buf}
+		object^ = Blob{hash, contents}
 	}
+
 	return object
 }
 
 destroy_object :: proc(object: ^Object) {
-	bytes.buffer_destroy(&object.buf)
+
+	switch kind in object {
+	case Tree:
+		delete(kind.hash)
+		delete(kind.entries)
+	case Commit:
+		delete(kind.tree_hash)
+		parent_hash, ok := kind.parent_hash.?
+		if ok do delete(parent_hash)
+		delete(kind.tree_hash)
+		delete(kind.author)
+		delete(kind.committer)
+		delete(kind.message)
+	case Blob:
+		delete(kind.hash)
+		delete(kind.data)
+	}
+
 	free(object)
 }
 
@@ -72,7 +91,7 @@ read_object :: proc(obj_hash: string) -> (obj: ^Object, err: failz.Error) {
 		return nil, AppError{.InvalidSize, msg}
 	}
 
-	return new_object(kind, buf), nil
+	return new_object(kind, obj_hash, bytes.buffer_to_bytes(&buf)), nil
 }
 
 hash_object :: proc(file_path: string, should_write := false) -> (file_hash: []byte) {

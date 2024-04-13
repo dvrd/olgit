@@ -1,5 +1,6 @@
 package gitol
 
+import "core:c/libc"
 import "core:os"
 import "core:path/slashpath"
 import "core:strings"
@@ -37,4 +38,11 @@ should_ignore :: proc(target: string) -> bool {
 	}
 
 	return false
+}
+
+timezone :: proc() -> int {
+	epoch_plus_11h: libc.time_t = 60 * 60 * 11
+	local_time := libc.localtime(&epoch_plus_11h).tm_hour
+	gm_time := libc.gmtime(&epoch_plus_11h).tm_hour
+	return cast(int)(local_time - gm_time)
 }
