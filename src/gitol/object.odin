@@ -40,24 +40,16 @@ new_object :: proc(kind: string, hash: string, contents: []byte) -> ^Object {
 }
 
 destroy_object :: proc(object: ^Object) {
-
-	switch kind in object {
+	#partial switch kind in object {
 	case Tree:
 		delete(kind.hash)
 		delete(kind.entries)
 	case Commit:
-		delete(kind.tree_hash)
-		parent_hash, ok := kind.parent_hash.?
-		if ok do delete(parent_hash)
-		delete(kind.tree_hash)
-		delete(kind.author)
-		delete(kind.committer)
-		delete(kind.message)
+		bytes.buffer_destroy(&kind.buffer)
 	case Blob:
 		delete(kind.hash)
 		delete(kind.data)
 	}
-
 	free(object)
 }
 
@@ -73,6 +65,7 @@ read_object :: proc(obj_hash: string) -> (obj: ^Object, err: failz.Error) {
 
 	buf: bytes.Buffer
 	zlib.inflate(contents, &buf)
+	defer bytes.buffer_destroy(&buf)
 
 	header := bytes.buffer_read_string(&buf, 0) or_return
 	split_header := strings.split(header, " ")

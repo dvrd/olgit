@@ -13,6 +13,7 @@ Commit :: struct {
 	author:      string,
 	committer:   string,
 	message:     string,
+	buffer:      bytes.Buffer,
 }
 
 AUTHOR :: []byte{'a', 'u', 't', 'h', 'o', 'r', ' '}
@@ -20,25 +21,46 @@ COMMITTER :: []byte{'c', 'o', 'm', 'm', 'i', 't', 't', 'e', 'r', ' '}
 
 new_commit :: proc(hash: string, data: []byte) -> Commit {
 	using failz
-	err: Error
 
+	err: Error
 	buffer: bytes.Buffer
+	line_kind: string
+	tree_hash: string
+	parent_hash: Maybe(string)
+	author: string
+	committer: string
+
 	bytes.buffer_init(&buffer, data)
-	bytes.buffer_read(&buffer, TREE_HEAD_BASE)
-	tree_hash := bytes.buffer_next(&buffer, 20)
-	unknown := bytes.buffer_read_byte(&buffer)
-	bytes.buffer_unread_byte(&buffer)
-	if unknown == 'p' {
-		bytes.buffer_read(&buffer, PARENT_HEAD_BASE)
-		parent_hash := bytes.buffer_next(&buffer, 20)
+
+	line_kind, err = bytes.buffer_read_string(&buffer, ' ')
+	ensure(line_kind == "tree ", "corrupt commit object missing tree hash: %v", line_kind)
+	catch(err, "could not read first line kind from commit object")
+
+	tree_hash, err = bytes.buffer_read_string(&buffer, '\n')
+	catch(err, "could not read tree hash from commit object")
+
+	line_kind, err = bytes.buffer_read_string(&buffer, ' ')
+	catch(err, "could not read second line kind from commit object")
+	if line_kind == "parent " {
+		parent_hash, err = bytes.buffer_read_string(&buffer, '\n')
+		catch(err, "could not read parent hash from commit object")
+
+		line_kind, err = bytes.buffer_read_string(&buffer, ' ')
+		catch(err, "could not read third line kind from commit object")
 	}
-	bytes.buffer_read(&buffer, AUTHOR)
-	author := bytes.buffer_read_string(&buffer, '\n')
-	bytes.buffer_read(&buffer, COMMITTER)
-	committer := bytes.buffer_read_string(&buffer, '\n')
+
+	author, err = bytes.buffer_read_string(&buffer, '\n')
+	catch(err, "could not read author from commit object")
+
+	line_kind, err = bytes.buffer_read_string(&buffer, ' ')
+	catch(err, "could not read third/fourth line kind from commit object")
+
+	committer, err = bytes.buffer_read_string(&buffer, '\n')
+	catch(err, "could not read committer from commit object")
+
 	message := bytes.buffer_to_string(&buffer)
 
-	return Commit{tree_hash, parent_hash, author, committer, message}
+	return Commit{string(tree_hash), parent_hash, author, committer, message, buffer}
 }
 
 print_commit :: proc(commit: Commit, print_commit_tree: bool) {
@@ -52,14 +74,15 @@ print_commit :: proc(commit: Commit, print_commit_tree: bool) {
 		print_tree(tree_obj)
 	} else {
 		buffer: bytes.Buffer
+		defer bytes.buffer_destroy(&buffer)
 
-		bytes.buffer_write_string(&buffer, fmt.tprintln("tree", commit.tree_hash))
+		bytes.buffer_write_string(&buffer, fmt.tprint("tree", commit.tree_hash))
 
 		parent_hash, ok := commit.parent_hash.?
-		if ok do bytes.buffer_write_string(&buffer, fmt.tprintln("parent", commit.parent_hash))
+		if ok do bytes.buffer_write_string(&buffer, fmt.tprint("parent", commit.parent_hash))
 
-		bytes.buffer_write_string(&buffer, fmt.tprintln("author", commit.author))
-		bytes.buffer_write_string(&buffer, fmt.tprintln("committer", commit.committer))
+		bytes.buffer_write_string(&buffer, fmt.tprint("author", commit.author))
+		bytes.buffer_write_string(&buffer, fmt.tprint("committer", commit.committer))
 		bytes.buffer_write_string(&buffer, commit.message)
 		bytes.buffer_write_string(&buffer, "\n")
 

@@ -3,6 +3,8 @@ package gitol
 import "core:bytes"
 import "core:encoding/hex"
 import "core:fmt"
+import "core:os"
+import "core:sort"
 import "core:strconv"
 import "core:strings"
 import "libs:failz"
