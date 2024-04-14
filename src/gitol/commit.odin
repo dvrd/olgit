@@ -8,6 +8,7 @@ import "core:time"
 import "libs:failz"
 
 Commit :: struct {
+	hash:        string,
 	tree_hash:   string,
 	parent_hash: Maybe(string),
 	author:      string,
@@ -38,29 +39,33 @@ new_commit :: proc(hash: string, data: []byte) -> Commit {
 
 	tree_hash, err = bytes.buffer_read_string(&buffer, '\n')
 	catch(err, "could not read tree hash from commit object")
+	tree_hash = strings.trim_right(tree_hash, "\n")
 
 	line_kind, err = bytes.buffer_read_string(&buffer, ' ')
 	catch(err, "could not read second line kind from commit object")
 	if line_kind == "parent " {
 		parent_hash, err = bytes.buffer_read_string(&buffer, '\n')
 		catch(err, "could not read parent hash from commit object")
+		parent_hash = strings.trim_right(parent_hash.(string), "\n")
 
 		line_kind, err = bytes.buffer_read_string(&buffer, ' ')
 		catch(err, "could not read third line kind from commit object")
 	}
 
 	author, err = bytes.buffer_read_string(&buffer, '\n')
+	author = strings.trim_right(author, "\n")
 	catch(err, "could not read author from commit object")
 
 	line_kind, err = bytes.buffer_read_string(&buffer, ' ')
 	catch(err, "could not read third/fourth line kind from commit object")
 
 	committer, err = bytes.buffer_read_string(&buffer, '\n')
+	committer = strings.trim_right(committer, "\n")
 	catch(err, "could not read committer from commit object")
 
 	message := bytes.buffer_to_string(&buffer)
 
-	return Commit{string(tree_hash), parent_hash, author, committer, message, buffer}
+	return Commit{hash, string(tree_hash), parent_hash, author, committer, message, buffer}
 }
 
 print_commit :: proc(commit: Commit, print_commit_tree: bool) {
@@ -77,14 +82,18 @@ print_commit :: proc(commit: Commit, print_commit_tree: bool) {
 		defer bytes.buffer_destroy(&buffer)
 
 		bytes.buffer_write_string(&buffer, fmt.tprint("tree", commit.tree_hash))
+		bytes.buffer_write_rune(&buffer, '\n')
 
-		parent_hash, ok := commit.parent_hash.?
-		if ok do bytes.buffer_write_string(&buffer, fmt.tprint("parent", commit.parent_hash))
+		if parent_hash, ok := commit.parent_hash.?; ok {
+			bytes.buffer_write_string(&buffer, fmt.tprint("parent", commit.parent_hash))
+			bytes.buffer_write_rune(&buffer, '\n')
+		}
 
 		bytes.buffer_write_string(&buffer, fmt.tprint("author", commit.author))
+		bytes.buffer_write_rune(&buffer, '\n')
 		bytes.buffer_write_string(&buffer, fmt.tprint("committer", commit.committer))
+		bytes.buffer_write_rune(&buffer, '\n')
 		bytes.buffer_write_string(&buffer, commit.message)
-		bytes.buffer_write_string(&buffer, "\n")
 
 		catch(write_stdout(bytes.buffer_to_bytes(&buffer)))
 	}
@@ -134,6 +143,6 @@ write_commit :: proc(tree_hash, message: string, parent_hash: Maybe(string) = ni
 	commit_hash := hash_blob(commit_obj)
 	defer delete(commit_hash)
 
-	// catch(write_object(commit_hash, commit_obj))
+	catch(write_object(commit_hash, commit_obj))
 	return bytes.clone(commit_hash)
 }
