@@ -7,7 +7,6 @@ import "core:io"
 import "core:mem"
 import "core:os"
 import "core:strings"
-import "libs:ansi"
 
 AllocError :: mem.Allocator_Error
 UnmarshalError :: json.Unmarshal_Error

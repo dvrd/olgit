@@ -1,7 +1,7 @@
 package failz
 
+import "../ansi"
 import "core:os"
-import "libs:ansi"
 
 // This icons requires a nerd font installed to be displayed correctly
 INFO := ansi.bold(ansi.colorize("  ", {80, 150, 225}))

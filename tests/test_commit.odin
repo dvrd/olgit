@@ -1,9 +1,9 @@
 package gitol_tests
 
+import gitol "../src"
 import "core:fmt"
 import "core:strings"
 import "core:testing"
-import "src:gitol"
 
 EXAMPLE_COMMIT_HASH :: "81601c2290fe321a24e53671e30511e13919bd70"
 EXAMPLE_COMMIT: string : `

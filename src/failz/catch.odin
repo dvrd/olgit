@@ -1,11 +1,11 @@
 package failz
 
+import "../ansi"
 import "core:compress"
 import "core:encoding/json"
 import "core:fmt"
 import "core:os"
 import "core:strings"
-import "libs:ansi"
 
 catch :: proc(err: Error, msg: string = "", should_exit := true, location := #caller_location) {
 	sb := strings.builder_make()
