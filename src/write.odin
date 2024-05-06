@@ -1,6 +1,5 @@
 package gitol
 
-import "./failz"
 import "core:bytes"
 import "core:encoding/hex"
 import "core:fmt"
@@ -8,6 +7,7 @@ import "core:os"
 import "core:path/filepath"
 import "core:sort"
 import "core:strings"
+import "libs:failz"
 import v_zlib "vendor:zlib"
 
 GIT_OBJECTS_DIR :: ".git/objects"

@@ -5,7 +5,7 @@ import "core:encoding/hex"
 import "core:fmt"
 import "core:strconv"
 import "core:strings"
-import "failz"
+import "libs:failz"
 
 print_blob :: proc(object: Blob) {
 	using failz

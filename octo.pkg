@@ -1,0 +1,6 @@
+{
+  name: "olgit",
+  version: "0.1.0",
+  host: "github.com",
+  owner: "dvrd"
+}

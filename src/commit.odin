@@ -5,7 +5,7 @@ import "core:fmt"
 import "core:math"
 import "core:strings"
 import "core:time"
-import "failz"
+import "libs:failz"
 
 Commit :: struct {
 	hash:        string,

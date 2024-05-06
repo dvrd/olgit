@@ -8,7 +8,7 @@ import "core:path/slashpath"
 import "core:sort"
 import "core:strconv"
 import "core:strings"
-import "failz"
+import "libs:failz"
 
 PWD := os.get_current_directory()
 GITIGNORE_PATH := slashpath.join({PWD, ".gitignore"})

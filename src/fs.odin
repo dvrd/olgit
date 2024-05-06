@@ -7,7 +7,7 @@ import "core:fmt"
 import "core:io"
 import "core:os"
 import "core:path/filepath"
-import "failz"
+import "libs:failz"
 import v_zlib "vendor:zlib"
 
 read_blob_from_path :: proc(path: string) -> ([]byte, failz.Error) {

@@ -7,7 +7,7 @@ import "core:os"
 import "core:sort"
 import "core:strconv"
 import "core:strings"
-import "failz"
+import "libs:failz"
 
 TreeEntry :: struct {
 	mode: int,
