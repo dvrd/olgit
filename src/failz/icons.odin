@@ -1,6 +1,6 @@
 package failz
 
-import "../ansi"
+import "ansi"
 import "core:os"
 
 // This icons requires a nerd font installed to be displayed correctly

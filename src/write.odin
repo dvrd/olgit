@@ -7,7 +7,7 @@ import "core:os"
 import "core:path/filepath"
 import "core:sort"
 import "core:strings"
-import "libs:failz"
+import "failz"
 import v_zlib "vendor:zlib"
 
 GIT_OBJECTS_DIR :: ".git/objects"
